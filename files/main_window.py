@@ -11,43 +11,42 @@ from widgets_communs import (BG, PANEL, CARD, HEADER, ACCENT, ACCENT2,
 
 class MainWindow(tk.Tk):
     def __init__(self):
-    super().__init__()
-    self.title("🏫 Gestion Scolaire — Espace Secrétariat")
-    self.configure(bg=BG)
-    configurer_style_ttk()
-    self._page_active = None
-    self.user_info    = None
+        super().__init__() # Décalé vers la droite
+        self.title("🏫 Gestion Scolaire — Espace Secrétariat")
+        self.configure(bg=BG)
+        configurer_style_ttk()
+        self._page_active = None
+        self.user_info    = None
 
-    # 1. Forcer la mise à jour pour obtenir les vraies dimensions
-    self.update_idletasks()
+        # 1. Forcer la mise à jour pour obtenir les vraies dimensions
+        self.update_idletasks()
 
-    # 2. Calcul des dimensions
-    sw = self.winfo_screenwidth()
-    sh = self.winfo_screenheight()
-    
-    w = min(1440, int(sw * 0.95))
-    h = min(860,  int(sh * 0.92))
-    
-    # 3. Calcul de la position centrée
-    x = (sw // 2) - (w // 2)
-    y = (sh // 2) - (h // 2)
+        # 2. Calcul des dimensions
+        sw = self.winfo_screenwidth()
+        sh = self.winfo_screenheight()
+        
+        w = min(1440, int(sw * 0.95))
+        h = min(860,  int(sh * 0.92))
+        
+        # 3. Calcul de la position centrée
+        x = (sw // 2) - (w // 2)
+        y = (sh // 2) - (h // 2)
 
-    # 4. Application de la géométrie
-    self.geometry(f"{w}x{h}+{x}+{y}")
-    self.minsize(900, 600)
+        # 4. Application de la géométrie
+        self.geometry(f"{w}x{h}+{x}+{y}")
+        self.minsize(900, 600)
 
-    # 5. Gestion spécifique de l'état "Maximisé"
-    if sw < 1400:
-        try:
-            # Sous Windows
-            self.state("zoomed")
-        except:
-            # Sous Ubuntu/Linux (GNOME)
-            self.attributes('-zoomed', True)
+        # 5. Gestion spécifique de l'état "Maximisé"
+        if sw < 1400:
+            try:
+                # Sous Windows
+                self.state("zoomed")
+            except:
+                # Sous Ubuntu/Linux (GNOME)
+                self.attributes('-zoomed', True)
 
         self._build_ui()
         self._tick()
-
     # ═══════════════════════════════════════════════════════════════
     # CONSTRUCTION UI
     # ═══════════════════════════════════════════════════════════════
