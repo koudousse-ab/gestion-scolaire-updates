@@ -1,0 +1,6 @@
+{
+  "version": "2.1.0",
+  "date": "2026-03-24",
+  "notes": "Centrage robuste + DPI Windows + fenetre activation",
+  "fichiers": ["app.py","main_window.py","login_window.py","licence_window.py","widgets_communs.py","maintenance_client.py","support_chat.py"]
+}
