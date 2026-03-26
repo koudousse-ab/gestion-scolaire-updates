@@ -183,6 +183,11 @@ if __name__ == "__main__":
         from database import init_db, DB_PATH, Session
         init_db()
         print(f"✅ Base de données : {DB_PATH}")
+        try:
+            from config import DATA_DIR
+            print(f"📁 Dossier données  : {DATA_DIR}")
+        except ImportError:
+            pass
     except Exception as e:
         import tkinter as tk
         from tkinter import messagebox
