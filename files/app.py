@@ -15,33 +15,95 @@ except Exception:
         pass
 from datetime import datetime
 
-# ─── Assurer que le répertoire courant est dans le path ─────────
-# Critique quand lancé depuis un raccourci bureau (working dir != app dir)
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-if BASE_DIR not in sys.path:
-    sys.path.insert(0, BASE_DIR)
-# Forcer le répertoire de travail sur le dossier de l'application
-os.chdir(BASE_DIR)
+# ─── Chemins permanents (Python normal + PyInstaller .exe) ──────
+from pathlib import Path   # ← import manquant sur Windows
 
-APP_VERSION = "1.0.1"
-BACKUP_DIR  = "backups_db"
-PHOTOS_DIR  = "photos_eleves"
+if getattr(sys, "frozen", False):
+    # Mode .exe PyInstaller — fichiers sources dans _MEIPASS (lecture seule)
+    _SRC_DIR = sys._MEIPASS
+    # Données persistantes dans AppData (Windows) ou ~/.local/share (Linux)
+    if sys.platform == "win32":
+        _DATA_DIR = os.path.join(os.environ.get("APPDATA", str(Path.home())),
+                                 "GestionScolaire")
+    else:
+        _DATA_DIR = os.path.join(str(Path.home()), ".local", "share",
+                                 "GestionScolaire")
+else:
+    # Mode Python normal — tout dans le dossier du script
+    _SRC_DIR  = os.path.dirname(os.path.abspath(__file__))
+    _DATA_DIR = _SRC_DIR
+
+# Créer les dossiers de données si nécessaire
+os.makedirs(_DATA_DIR, exist_ok=True)
+
+# Ajouter les sources au path Python
+if _SRC_DIR not in sys.path:
+    sys.path.insert(0, _SRC_DIR)
+if _DATA_DIR not in sys.path:
+    sys.path.insert(0, _DATA_DIR)
+
+# Changer le répertoire courant vers les DONNÉES (pas les sources)
+os.chdir(_DATA_DIR)
+
+from pathlib import Path
+BASE_DIR   = _SRC_DIR
+DATA_DIR   = _DATA_DIR
+APP_VERSION = "2.1.0"
+BACKUP_DIR  = os.path.join(_DATA_DIR, "backups_db")
+PHOTOS_DIR  = os.path.join(_DATA_DIR, "photos_eleves")
+
+os.makedirs(BACKUP_DIR, exist_ok=True)
+os.makedirs(PHOTOS_DIR, exist_ok=True)
 
 
 def sauvegarde_initiale():
-    """Crée une copie horodatée de la BDD au démarrage."""
+    """
+    Crée une copie horodatée de la BDD au démarrage.
+    - Sauvegarde dans _DATA_DIR/backups_db/
+    - Garde seulement les 30 dernières sauvegardes
+    - Ne fait rien si la BDD n'existe pas encore (premier démarrage)
+    """
     from database import DB_PATH
-    os.makedirs(BACKUP_DIR, exist_ok=True)
-    if not os.path.exists(DB_PATH):
+
+    # Utiliser le bon dossier de données (recalculé ici pour être sûr)
+    backup_dir = os.path.join(_DATA_DIR, "backups_db")
+    os.makedirs(backup_dir, exist_ok=True)
+
+    db_path = str(DB_PATH)
+    if not os.path.exists(db_path):
+        print("ℹ️  Premier démarrage — pas de sauvegarde (BDD vide)")
         return
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    nom = f"DB_{os.path.basename(DB_PATH).replace('.db', '')}_{ts}.db"
-    dest = os.path.join(BACKUP_DIR, nom)
+
+    # Taille mini 4Ko — ignorer les BDD vides
+    if os.path.getsize(db_path) < 4096:
+        print("ℹ️  BDD trop petite — sauvegarde ignorée")
+        return
+
+    ts   = datetime.now().strftime("%Y%m%d_%H%M%S")
+    nom  = f"DB_gestion_ecole_{ts}.db"
+    dest = os.path.join(backup_dir, nom)
+
     try:
-        shutil.copy2(DB_PATH, dest)
-        print(f"✅ Sauvegarde initiale : {dest}")
+        shutil.copy2(db_path, dest)
+        taille = os.path.getsize(dest) // 1024
+        print(f"✅ Sauvegarde : {dest} ({taille} Ko)")
     except Exception as e:
         print(f"⚠️  Sauvegarde échouée : {e}")
+        return
+
+    # ── Garder seulement les 30 dernières sauvegardes ──────────
+    try:
+        sauvegardes = sorted([
+            f for f in os.listdir(backup_dir)
+            if f.startswith("DB_") and f.endswith(".db")
+        ])
+        if len(sauvegardes) > 30:
+            a_supprimer = sauvegardes[:-30]
+            for f in a_supprimer:
+                os.remove(os.path.join(backup_dir, f))
+            print(f"🗑️  {len(a_supprimer)} ancienne(s) sauvegarde(s) supprimée(s)")
+    except Exception as e:
+        print(f"⚠️  Nettoyage sauvegardes : {e}")
 
 
 def creer_periodes_initiales(session):
