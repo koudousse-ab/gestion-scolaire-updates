@@ -31,8 +31,8 @@ class LicenceWindow(tk.Toplevel):
         self.update_idletasks()
         sw = self.winfo_screenwidth()
         sh = self.winfo_screenheight()
-        w  = min(620, sw - 40)
-        h  = min(580, sh - 80)
+        w  = min(660, sw - 40)
+        h  = min(740, sh - 80)
         x  = (sw - w) // 2
         y  = max(0, (sh - h) // 2)
         self.geometry(f"{w}x{h}+{x}+{y}")
@@ -80,6 +80,41 @@ class LicenceWindow(tk.Toplevel):
                   font=("Helvetica", 9, "bold"),
                   relief=tk.FLAT, cursor="hand2",
                   padx=10, pady=6).pack(side="right")
+
+        # ── Tarifs ────────────────────────────────────────────
+        tarif_frame = tk.LabelFrame(self,
+                                     text="  💰  Nos tarifs (FCFA)  ",
+                                     bg=CARD, fg="#C8A951",
+                                     font=("Helvetica", 10, "bold"),
+                                     relief=tk.GROOVE, bd=2)
+        tarif_frame.pack(fill="x", padx=28, pady=(0, 10))
+
+        tarifs = [
+            ("⏱️  Essai 30 jours",       "GRATUIT"),
+            ("📅  1 Mois",               "5 000 FCFA"),
+            ("📆  3 Mois",              "12 000 FCFA"),
+            ("🗓️  6 Mois",              "20 000 FCFA"),
+            ("📅  1 An",                "35 000 FCFA"),
+            ("🔐  Permanent",           "80 000 FCFA"),
+        ]
+        grid = tk.Frame(tarif_frame, bg=CARD)
+        grid.pack(fill="x", padx=10, pady=6)
+        for i, (lbl, prix) in enumerate(tarifs):
+            col = i % 3
+            row = i // 3
+            cell = tk.Frame(grid, bg="#1A3A5C")
+            cell.grid(row=row, column=col, padx=4, pady=3, sticky="ew")
+            grid.columnconfigure(col, weight=1)
+            tk.Label(cell, text=lbl, bg="#1A3A5C", fg="#E2E8F0",
+                     font=("Helvetica", 9), anchor="w").pack(
+                         side="left", padx=6, pady=5)
+            tk.Label(cell, text=prix, bg="#1A3A5C", fg="#C8A951",
+                     font=("Helvetica", 9, "bold"), anchor="e").pack(
+                         side="right", padx=6, pady=5)
+        tk.Label(tarif_frame,
+                 text="📞 +228 90 15 96 39   ✉️ koudousetchedre@gmail.com",
+                 bg=CARD, fg=MUTED,
+                 font=("Helvetica", 8, "italic")).pack(pady=(2, 8))
 
         # ── Saisie clé ────────────────────────────────────────
         key_frame = tk.LabelFrame(self,
